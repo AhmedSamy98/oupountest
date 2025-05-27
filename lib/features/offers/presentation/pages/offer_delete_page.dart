@@ -4,9 +4,15 @@ import '../../logic/offer_cubit.dart';
 import '../../logic/offer_state.dart';
 import '../widgets/offer_card.dart';
 
-class OfferDeletePage extends StatelessWidget {
+class OfferDeletePage extends StatefulWidget {
+  static const route = '/delete';
   const OfferDeletePage({super.key});
 
+  @override
+  OfferDeletePageState createState() => OfferDeletePageState();
+}
+
+class OfferDeletePageState extends State<OfferDeletePage> {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<OfferCubit>();
@@ -45,7 +51,10 @@ class OfferDeletePage extends StatelessWidget {
                         ],
                       ),
                     );
-                    if (confirmed == true) await cubit.delete(offer.id);
+                    if (confirmed == true) {
+                      await cubit.delete(offer.id);
+                      setState(() {});
+                    }
                   },
                 );
               },
