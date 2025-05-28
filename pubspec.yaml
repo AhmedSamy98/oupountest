@@ -50,6 +50,7 @@ dependencies:
   data_table_2: ^2.6.0
   image_picker: ^1.1.2
   file_picker: ^10.1.9
+  flutter_secure_storage: ^9.2.4
 
 dev_dependencies:
   flutter_test:

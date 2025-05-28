@@ -166,6 +166,8 @@ const _navItems = [
   // _NavItem(Icons.add_box,      'إضافة عرض',   'Add Offer',   '/verify-phone'),
   _NavItem(Icons.add_box,      'إضافة ',   'Add ',   '/upload-phone'),
   _NavItem(Icons.table_view,   'عرض العروض',  'Offers List', '/list'),
+  _NavItem(Icons.table_view,   'إداره الأعمال',  'Manage Business', '/business'),
+  _NavItem(Icons.table_view,   'إضافه الفروع',  'Manage Brunch', '/branch/phone'),
   // _NavItem(Icons.delete,       'حذف العروض',  'Delete',      '/delete'),
 ];
 

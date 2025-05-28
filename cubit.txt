@@ -1,0 +1,214 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:dio/dio.dart';
+
+import '../../../core/api/dio_client.dart';
+import '../../../core/api/endpoints.dart';
+import '../data/models/business_activity_model.dart';
+import '../data/models/business_model.dart';
+import 'business_registration_state.dart';
+
+class BusinessRegistrationCubit extends Cubit<BusinessRegistrationState> {
+  List<BusinessActivityModel> _businessActivities = [];
+  BusinessActivityModel? _selectedActivity;
+  List<String> _selectedCategories = [];
+  List<String> _selectedServices = [];
+  
+  // حالة لتتبع ما إذا كان قد تم اختيار نشاط تجاري
+  bool _hasActivityBeenSelected = false;
+
+  BusinessRegistrationCubit() : super(BusinessRegistrationInitial());
+  // Getters for the selected values
+  List<BusinessActivityModel> get businessActivities => _businessActivities;
+  BusinessActivityModel? get selectedActivity => _selectedActivity;
+  List<String> get selectedCategories => _selectedCategories;
+  List<String> get selectedServices => _selectedServices;
+  bool get hasActivityBeenSelected => _hasActivityBeenSelected;// Load business activities from API
+  Future<void> loadBusinessActivities() async {
+    emit(BusinessActivitiesLoading());
+    try {
+      print('Loading business activities from API...');
+      
+      // طباعة عنوان API الكامل
+      final fullUrl = DioClient.dio.options.baseUrl + Endpoints.servicesActivity;
+      print('Full API URL: $fullUrl');
+      
+      final response = await DioClient.dio.get(Endpoints.servicesActivity);
+      print('API response received. Status code: ${response.statusCode}');
+      
+      // طباعة بيانات الاستجابة من API للتحقق
+      print('Raw API Response: ${response.data}');
+      
+      final data = response.data as List;
+      print('Data items count: ${data.length}');
+      
+      // طباعة العنصر الأول لفحص بنية البيانات
+      if (data.isNotEmpty) {
+        print('First item structure: ${data[0]}');
+        
+        // التحقق من وجود الفئات في العنصر الأول
+        if (data[0].containsKey('categories')) {
+          print('Categories found in the first item: ${(data[0]['categories'] as List?)?.length ?? 0}');
+        } else {
+          print('No categories key found in the first item!');
+          print('Available keys: ${data[0].keys.toList()}');
+        }
+      }
+      
+      _businessActivities = data
+          .map((activity) => BusinessActivityModel.fromJson(activity))
+          .toList();
+          
+      print('Business activities loaded: ${_businessActivities.length}');
+      
+      // طباعة تفاصيل الأنشطة والفئات والخدمات
+      for (var activity in _businessActivities) {
+        print('Activity: ${activity.nameAr} (${activity.id}), Categories: ${activity.categories.length}');
+        for (var category in activity.categories) {
+          print('  Category: ${category.categoryAr} (${category.id}), Services: ${category.services.length}');
+          for (var service in category.services) {
+            print('    Service: ${service.serviceAr} (${service.id})');
+          }
+        }
+      }
+      
+      emit(BusinessActivitiesLoaded(_businessActivities));
+    } catch (e) {
+      print('Error loading business activities: $e');
+      emit(BusinessActivitiesError('فشل في تحميل أنشطة الأعمال: $e'));
+    }
+  }  // Set selected business activity  void setSelectedBusinessActivity(String activityId) {
+    try {
+      print('Selecting business activity: $activityId');
+      _selectedActivity = _businessActivities.firstWhere(
+        (activity) => activity.id == activityId,
+      );
+      
+      print('Selected activity: ${_selectedActivity?.nameAr}, Categories count: ${_selectedActivity?.categories.length}');
+      
+      // Reset selections when business activity changes
+      _selectedCategories = [];
+      _selectedServices = [];
+      
+      // تعيين علامة أنه تم اختيار نشاط تجاري
+      _hasActivityBeenSelected = true;
+      
+      // إصدار حالة خاصة عند اختيار النشاط التجاري لضمان تحديث واجهة المستخدم
+      if (_selectedActivity != null) {
+        print('Emitting BusinessActivitySelected state with activity: ${_selectedActivity!.nameAr}');
+        print('Categories in this activity: ${_selectedActivity!.categories.length}');
+        emit(BusinessActivitySelected(_selectedActivity!));
+      } else {
+        print('Selected activity is null!');
+        emit(BusinessActivitiesError('خطأ في تحديد نشاط العمل: النشاط غير موجود'));
+      }
+    } catch (e) {
+      print('Error setting selected business activity: $e');
+      emit(BusinessActivitiesError('خطأ في تحديد نشاط العمل: $e'));
+    }
+  }
+  // Toggle category selection
+  void toggleCategory(String categoryId) {
+    print('Toggling category: $categoryId');
+    
+    try {
+      if (_selectedCategories.contains(categoryId)) {
+        print('Removing category: $categoryId');
+        _selectedCategories.remove(categoryId);
+        
+        // Remove any services that belong to this category
+        if (_selectedActivity != null) {
+          final category = _selectedActivity!.categories.firstWhere(
+            (cat) => cat.id == categoryId,
+          );
+          
+          final beforeCount = _selectedServices.length;
+          _selectedServices = _selectedServices
+              .where((serviceId) => !category.services
+                  .any((service) => service.id == serviceId))
+              .toList();
+          final afterCount = _selectedServices.length;
+          
+          print('Removed ${beforeCount - afterCount} services from category: ${category.categoryAr}');
+        }
+      } else {
+        print('Adding category: $categoryId');
+        _selectedCategories.add(categoryId);      }
+      
+      print('Selected categories after toggle: ${_selectedCategories.length}');
+      
+      // When toggling categories, if we have a selected activity, 
+      // emit BusinessActivitySelected to ensure the UI refreshes
+      if (_selectedActivity != null) {
+        print('Re-emitting BusinessActivitySelected after category toggle with activity: ${_selectedActivity!.nameAr}');
+        emit(BusinessActivitySelected(_selectedActivity!));
+      } else {
+        // Fallback to the general state if no activity is selected (shouldn't happen)
+        emit(BusinessActivitiesLoaded(_businessActivities));
+      }
+    } catch (e) {
+      print('Error toggling category: $e');
+    }
+  }
+
+  // Toggle service selection
+  void toggleService(String serviceId) {
+    if (_selectedServices.contains(serviceId)) {
+      _selectedServices.remove(serviceId);
+    } else {
+      _selectedServices.add(serviceId);
+    }
+    emit(BusinessActivitiesLoaded(_businessActivities));
+  }
+  // Get available services for selected categories
+  List<ServiceModel> getAvailableServices() {
+    if (_selectedActivity == null) {
+      print('getAvailableServices: No selected activity');
+      return [];
+    }
+    
+    if (_selectedCategories.isEmpty) {
+      print('getAvailableServices: No selected categories');
+      return [];
+    }
+    
+    print('getAvailableServices: Selected categories count: ${_selectedCategories.length}');
+    
+    List<ServiceModel> services = [];
+    for (var category in _selectedActivity!.categories) {
+      if (_selectedCategories.contains(category.id)) {
+        print('Adding services from category: ${category.categoryAr}, services count: ${category.services.length}');
+        services.addAll(category.services);
+      }
+    }
+    
+    print('getAvailableServices: Total available services: ${services.length}');
+    return services;
+  }
+  // Register business
+  Future<void> registerBusiness(RegisterBusinessRequest request) async {
+    emit(BusinessRegistrationLoading());
+    try {
+      await DioClient.dio.post(
+        Endpoints.registerBusiness,
+        data: request.toJson(),
+      );
+      emit(BusinessRegistrationSuccess('تم تسجيل العمل التجاري بنجاح'));
+    } catch (e) {
+      String errorMessage = 'فشل تسجيل العمل التجاري';
+      if (e is DioException && e.response != null) {
+        errorMessage += ': ${e.response?.data ?? e.message}';
+      } else {
+        errorMessage += ': ${e.toString()}';
+      }
+      emit(BusinessRegistrationFailure(errorMessage));
+    }
+  }
+
+  // Reset state
+  void reset() {
+    _selectedActivity = null;
+    _selectedCategories = [];
+    _selectedServices = [];
+    emit(BusinessRegistrationInitial());
+  }
+}
