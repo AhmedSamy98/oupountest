@@ -85,8 +85,6 @@ class _OfferFormPageState extends State<OfferFormPage> {
                     child: const Text('موافق'),
                     onPressed: () {
                       Navigator.of(context).pop();
-                      // Return to the home page after user acknowledges
-                      // Navigator.of(context).popUntil(ModalRoute.withName('/'));
                     },
                   ),
                 ],
