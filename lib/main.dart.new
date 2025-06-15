@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:oupountest/features/branch/logic/branch_cubit.dart';
 import 'package:responsive_framework/responsive_framework.dart' hide BouncingScrollWrapper;
 import 'core/widgets/bouncing_scroll_wrapper.dart';
@@ -24,7 +23,6 @@ import 'features/orders/data/repositories/order_repository_impl.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load();          // تحميل .env
   initLogger();                 // إعداد الـ Logger
   await DioClient.init();       // إعداد Dio
   runApp(const MyApp());
@@ -32,6 +30,7 @@ Future<void> main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
@@ -62,7 +61,8 @@ class MyApp extends StatelessWidget {
         routes: {
           HomePage.route:        (_) => const HomePage(),
           OfferListPage.route:   (_) => const OfferListPage(),
-          OfferDeletePage.route: (_) => const OfferDeletePage(),          PhoneNumberPage.route: (_) => const PhoneNumberPage(),
+          OfferDeletePage.route: (_) => const OfferDeletePage(),
+          PhoneNumberPage.route: (_) => const PhoneNumberPage(),
           BusinessDashboardPage.route: (_) => const BusinessDashboardPage(),
           BranchPhoneNumberPage.route: (_) => const BranchPhoneNumberPage(),
           BusinessListingPage.route: (_) => const BusinessListingPage(),

@@ -42,6 +42,7 @@ const _navItems = [
   _NavItem(Icons.table_view,   'عرض العروض',  'Offers List', '/list'),
   _NavItem(Icons.table_view,   'إداره الأعمال',  'Manage Business', '/business'),
   _NavItem(Icons.table_view,   'إضافه الفروع',  'Manage Brunch', '/branch/phone'),
+  _NavItem(Icons.receipt_long, 'الطلبات',  'Orders', '/orders'),
 ];
 
 class _NavCard extends StatefulWidget {

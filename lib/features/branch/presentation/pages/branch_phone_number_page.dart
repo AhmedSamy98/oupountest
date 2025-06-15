@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'branch_creation_form_page.dart';
+import '../../logic/branch_cubit.dart';
 
 class BranchPhoneNumberPage extends StatefulWidget {
   static const route = '/branch/phone';
@@ -22,18 +24,20 @@ class _BranchPhoneNumberPageState extends State<BranchPhoneNumberPage> {
     _phoneController.dispose();
     super.dispose();
   }
-
   void _submitPhoneNumber() {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
         _isSubmitting = true;
-      });
-
-      // مباشرة إلى صفحة إنشاء الفرع
-      Navigator.pushNamed(
-        context,
-        BranchCreationFormPage.route,
-        arguments: _phoneController.text,
+      });      // الانتقال إلى صفحة إنشاء الفرع مع تمرير رقم الهاتف
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => BlocProvider(
+            create: (_) => BranchCubit(),
+            child: BranchCreationFormPage(
+              phoneNumber: _phoneController.text,
+            ),
+          ),
+        ),
       );
 
       setState(() {
@@ -85,7 +89,6 @@ class _BranchPhoneNumberPageState extends State<BranchPhoneNumberPage> {
                 decoration: InputDecoration(
                   labelText: 'رقم الهاتف',
                   hintText: '5XXXXXXXX',
-                  prefixText: '+966 ',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

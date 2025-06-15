@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:oupountest/core/api/dio_client.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:oupountest/core/utils/constants.dart';
 
 import '../data/branch_model.dart';
 
@@ -31,7 +32,8 @@ class BranchFetchCubit extends Cubit<BranchFetchState> {
   Future<List<BranchModel>> fetch(String phone) async {
     emit(BranchLoading());
     try {
-      final token = dotenv.env['TOKEN'] ?? '';
+      final token = dotenv.env['TOKEN'] ?? kDefaultToken;
+      print(token);
       final res = await DioClient.dio.get(
         '/admin/get_businesses',
         queryParameters: {
@@ -41,6 +43,9 @@ class BranchFetchCubit extends Cubit<BranchFetchState> {
         },
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
+      print('► GET‑Branches status: ${res.statusCode}');
+      print('$phone');
+      print('$res');
 
       print('► GET‑Branches response: ${res.data}');
       final businesses = res.data['businesses'] as List?;
